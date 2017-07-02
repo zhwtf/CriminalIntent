@@ -29,6 +29,8 @@ public class CrimeFragment extends Fragment {
     private Button mDateButton;
     private CheckBox mSolvedCheckBox;
 
+
+
     //将数据存放在fragment的argument bundle中
     //便于复用
     public static CrimeFragment newInstance(UUID crimeId) {
@@ -39,6 +41,9 @@ public class CrimeFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
+
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
