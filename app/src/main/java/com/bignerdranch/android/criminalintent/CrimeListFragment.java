@@ -6,6 +6,9 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -26,6 +29,23 @@ public class CrimeListFragment extends Fragment {
     private static final int REQUEST_CRIME = 1;
 
 
+
+    /*
+    Fragment.onCreateOptionsMenu(Menu, MenuInflater)方法是由FragmentManager负责
+调用的。因此，当activity接收到操作系统的onCreateOptionsMenu(...)方法回调请求时，我们
+必须明确告诉FragmentManager：其管理的fragment应接收onCreateOptionsMenu(...)方法的
+调用指令。要通知FragmentManager，需调用以下方法：
+public void setHasOptionsMenu(boolean hasMenu)
+在CrimeListFragment.onCreate(...)方法中，让FragmentManager知道CrimeListFragment
+需接收选项菜单方法回调，
+     */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_crime_list, container, false);
@@ -43,6 +63,35 @@ public class CrimeListFragment extends Fragment {
         super.onResume();
         updateUI();
     }
+
+    /*
+    然而，按照CriminalIntent应用的设计，选项菜单相关的回调函数需在fragment而非activity里
+    实现。不用担心，Fragment有一套自己的选项菜单回调函数。稍后，我们会在CrimeListFragment
+    中实现这些方法。以下为创建菜单和响应菜单项选择事件的两个回调方法：
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
+    public boolean onOptionsItemSelected(MenuItem item)
+     */
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crime_list, menu);
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_new_crime:
+                Crime crime = new Crime();
+                CrimeLab.get(getActivity()).addCrime(crime);
+                Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getId());
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
 
     private void updateUI() {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
