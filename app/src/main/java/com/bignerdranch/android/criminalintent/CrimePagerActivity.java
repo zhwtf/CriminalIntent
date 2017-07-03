@@ -43,6 +43,16 @@ public class CrimePagerActivity extends FragmentActivity {
         mViewPager = (ViewPager) findViewById(R.id.crime_view_pager);
         mCrimes = CrimeLab.get(this).getCrimes();
         FragmentManager fragmentManager = getSupportFragmentManager();
+
+        /*FragmentPagerAdapter是另外一种可用的PagerAdapter，其用法与FragmentState-
+        PagerAdapter基本一致。唯一的区别在于：卸载不再需要的fragment时，各自采用的处理方法有
+        所不同。
+        FragmentStatePagerAdapter会销毁不需要的fragment。事务提交后，activity的Fragment-
+        Manager中的fragment会被彻底移除。FragmentStatePagerAdapter类名中的“state”表明：在
+        销毁fragment时，可在onSaveInstanceState(Bundle)方法中保存fragment的Bundle信息。用户
+        切换回来时，保存的实例状态可用来恢复生成新的fragment
+
+        */
         mViewPager.setAdapter(new FragmentStatePagerAdapter(fragmentManager) {
             @Override
             public Fragment getItem(int position) {
