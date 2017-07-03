@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/menu_item_new_crime"
+        android:icon="@drawable/ic_menu_add"
+        android:title="@string/new_crime"
+        app:showAsAction="ifRoom|withText"/>
+
+
+</menu>
+
+<!--
+   showAsAction属性用于指定菜单选项是显示在工具栏上，还是隐藏于溢出菜单（overflow
+menu）。该属性当前设置为ifRoom和withText的组合值。因此，只要空间足够，菜单项图标及
+其文字描述都会显示在工具栏上。如空间仅够显示菜单项图标，文字描述就不会显示。如空间大
+小不够显示任何项，菜单项就会隐藏到溢出菜单中。     -->
