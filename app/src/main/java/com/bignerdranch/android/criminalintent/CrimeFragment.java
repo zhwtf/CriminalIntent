@@ -9,12 +9,18 @@ import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.view.MenuInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+
 
 import java.util.Date;
 import java.util.UUID;
@@ -29,6 +35,7 @@ public class CrimeFragment extends Fragment {
     private static final String DIALOG_DATE = "DialogDate";
 
     private static final int REQUEST_DATE = 0;
+    public static final String EXTRA_DELETE_CRIME = "delete_crime";
 
 
     private Crime mCrime;
@@ -56,8 +63,11 @@ public class CrimeFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //set the toolbar
+        setHasOptionsMenu(true);
         //mCrime = new Crime();
         //UUID crimeId = (UUID) getActivity().getIntent().getSerializableExtra(CrimeActivity.EXTRA_CRIME_ID);
+        //从argument中获取crime ID
         UUID crimeId = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
     }
@@ -117,6 +127,28 @@ public class CrimeFragment extends Fragment {
 
     }
 
+
+    //添加remove crime 功能
+    //只能按顺序删除，否则会直接退出程序
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crime_detail, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_delete_crime:
+                CrimeLab.get(getActivity()).deleteCrime(mCrime);
+                //getActivity().finish();
+                setResult();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     /*
     在CrimeFragment中，覆盖onActivityResult(...)方法，从extra中获取日期数据，设置
     对应Crime的记录日期，然后刷新日期按钮的显示
@@ -149,6 +181,13 @@ public class CrimeFragment extends Fragment {
     public void returnResult() {
         getActivity().setResult(Activity.RESULT_OK, null);
 
+    }
+
+    private void setResult() {
+        Intent intent = new Intent();
+        intent.putExtra(EXTRA_DELETE_CRIME, true);
+        getActivity().setResult(Activity.RESULT_OK, intent);
+        getActivity().finish();
     }
 
 

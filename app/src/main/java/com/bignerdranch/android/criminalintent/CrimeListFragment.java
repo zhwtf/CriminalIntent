@@ -3,6 +3,7 @@ package com.bignerdranch.android.criminalintent;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -14,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.app.Activity;
 
 import java.util.List;
 
@@ -25,6 +27,12 @@ public class CrimeListFragment extends Fragment {
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
     private int positionClicked;
+    private boolean mSubtitleVisible;
+
+    private boolean mIsDeleteCrime;
+
+    //保存子标题状态值
+    private static final String SAVED_SUBTITLE_VISIBLE = "subtitle";
 
     private static final int REQUEST_CRIME = 1;
 
@@ -53,6 +61,10 @@ public void setHasOptionsMenu(boolean hasMenu)
         mCrimeRecyclerView = (RecyclerView) view.findViewById(R.id.crime_recycler_view);
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+        if (savedInstanceState != null) {
+            mSubtitleVisible = savedInstanceState.getBoolean(SAVED_SUBTITLE_VISIBLE);
+        }
+
         updateUI();
 
         return view;
@@ -62,6 +74,13 @@ public void setHasOptionsMenu(boolean hasMenu)
     public void onResume() {
         super.onResume();
         updateUI();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(SAVED_SUBTITLE_VISIBLE, mSubtitleVisible);
+
     }
 
     /*
@@ -76,6 +95,13 @@ public void setHasOptionsMenu(boolean hasMenu)
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_crime_list, menu);
 
+        MenuItem subtitleItem = menu.findItem(R.id.menu_item_show_subtitle);
+        if (mSubtitleVisible) {
+            subtitleItem.setTitle(R.string.hide_subtitle);
+        } else {
+            subtitleItem.setTitle(R.string.show_subtitle);
+        }
+
     }
 
     @Override
@@ -87,9 +113,32 @@ public void setHasOptionsMenu(boolean hasMenu)
                 Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getId());
                 startActivity(intent);
                 return true;
+            case R.id.menu_item_show_subtitle:
+                mSubtitleVisible = !mSubtitleVisible;
+                getActivity().invalidateOptionsMenu();
+                updateSubtitle();;
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void updateSubtitle() {
+        CrimeLab crimeLab = CrimeLab.get(getActivity());
+        int crimeCount = crimeLab.getCrimes().size();
+        String subtitle = getString(R.string.subtitle_format, crimeCount);
+
+        if (!mSubtitleVisible) {
+            subtitle = null;
+        }
+/*
+getString(int resId, Object...formatArgs)方法接受字符串资源中占位符的替换值，
+updateSubtitle()用它产生子标题字符串。
+ */
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        activity.getSupportActionBar().setSubtitle(subtitle);
+
+
     }
 
 
@@ -102,9 +151,15 @@ public void setHasOptionsMenu(boolean hasMenu)
             mCrimeRecyclerView.setAdapter(mAdapter);
 
         } else {
-            //mAdapter.notifyDatasetChanged()
-            mAdapter.notifyItemChanged(positionClicked);
+            if (mIsDeleteCrime) {
+                mAdapter.notifyItemRemoved(positionClicked);
+            } else {
+                //mAdapter.notifyDatasetChanged()
+                mAdapter.notifyItemChanged(positionClicked);
+            }
         }
+
+        updateSubtitle();
     }
 
 
@@ -157,7 +212,11 @@ public void setHasOptionsMenu(boolean hasMenu)
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CRIME) {
-            //Handle result
+            if (requestCode == REQUEST_CRIME) {
+                if (resultCode == Activity.RESULT_OK) {
+                    mIsDeleteCrime = data.getBooleanExtra(CrimeFragment.EXTRA_DELETE_CRIME, false);
+                }
+            }
         }
     }
 
