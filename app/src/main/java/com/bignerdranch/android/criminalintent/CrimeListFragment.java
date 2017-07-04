@@ -155,6 +155,7 @@ updateSubtitle()用它产生子标题字符串。
                 mAdapter.notifyItemRemoved(positionClicked);
             } else {
                 //mAdapter.notifyDatasetChanged()
+                mAdapter.setCrimes(crimes);
                 mAdapter.notifyItemChanged(positionClicked);
             }
         }
@@ -248,6 +249,10 @@ updateSubtitle()用它产生子标题字符串。
         @Override
         public int getItemCount() {
             return mCrimes.size();
+        }
+
+        public void setCrimes(List<Crime> crimes) {
+            mCrimes = crimes;
         }
     }
 

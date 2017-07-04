@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,6 +24,7 @@ import android.view.MenuItem;
 
 
 import java.util.Date;
+import java.util.StringTokenizer;
 import java.util.UUID;
 
 /**
@@ -42,6 +44,7 @@ public class CrimeFragment extends Fragment {
     private EditText mTitleField;
     private Button mDateButton;
     private CheckBox mSolvedCheckBox;
+    private Button mReportButton;
 
 
 
@@ -130,13 +133,40 @@ public class CrimeFragment extends Fragment {
             }
         });
 
+        mReportButton = (Button) v.findViewById(R.id.crime_report);
+        mReportButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_TEXT, getCrimeReport());
+                i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
+                /*
+                使用隐式intent启动activity时，也可以创建每次都显示的activity选择器。和以前一样创建隐
+式intent后，调用以下Intent方法并传入创建的隐式intent以及用作选择器标题的字符串
+                 */
+                i = Intent.createChooser(i, getString(R.string.send_report));
+                startActivity(i);
+
+            }
+        });
+        /*
+        以上代码使用了一个接受字符串参数的Intent构造方法，我们传入的是一个定义操作的常
+量。取决于要创建的隐式intent类别，也可以使用一些其他形式的构造方法。关于其他intent构造
+方法及其使用说明，可以查阅Intent参考文档。因为没有接受数据类型的构造方法可用，所以
+必须专门设置它。
+消息内容和主题是作为extra附加到intent上的。注意，这些extra信息使用了Intent类中定
+义的常量。因此，任何响应该intent的activity都知道这些常量，自然也知道该如何使用它们的
+关联值。
+         */
+
+
         return v;
 
     }
 
 
     //添加remove crime 功能
-    //只能按顺序删除，否则会直接退出程序
+    //只加getActivity().finish(); －－－》 只能按顺序删除，否则会直接退出程序
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
@@ -195,6 +225,30 @@ public class CrimeFragment extends Fragment {
         intent.putExtra(EXTRA_DELETE_CRIME, true);
         getActivity().setResult(Activity.RESULT_OK, intent);
         getActivity().finish();
+    }
+
+    private String getCrimeReport() {
+        String solvedString = null;
+        if (mCrime.isSolved()) {
+            solvedString = getString(R.string.crime_report_solved);
+
+        }else {
+            solvedString = getString(R.string.crime_report_unsolved);
+        }
+        String dateFormat = "EEE, MMM dd";
+        String dateString = DateFormat.format(dateFormat, mCrime.getDate()).toString();
+
+        String suspect = mCrime.getSuspect();
+        if (suspect == null) {
+            suspect = getString(R.string.crime_report_no_suspect);
+
+        }else {
+            suspect = getString(R.string.crime_report_suspect, suspect);
+        }
+        String report = getString(R.string.crime_report, mCrime.getTitle(),
+                dateString, solvedString, suspect);
+        return report;
+
     }
 
 
