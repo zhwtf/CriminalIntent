@@ -3,7 +3,10 @@ package com.bignerdranch.android.criminalintent;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.Editable;
@@ -37,7 +40,10 @@ public class CrimeFragment extends Fragment {
     private static final String DIALOG_DATE = "DialogDate";
 
     private static final int REQUEST_DATE = 0;
+    private static final int REQUEST_CONTACT = 1;
+
     public static final String EXTRA_DELETE_CRIME = "delete_crime";
+
 
 
     private Crime mCrime;
@@ -45,6 +51,7 @@ public class CrimeFragment extends Fragment {
     private Button mDateButton;
     private CheckBox mSolvedCheckBox;
     private Button mReportButton;
+    private Button mSuspectButton;
 
 
 
@@ -160,6 +167,29 @@ public class CrimeFragment extends Fragment {
          */
 
 
+
+        /*
+        现在，创建另一个隐式intent，实现让用户从联系人应用里选择嫌疑人。新建的隐式intent将
+由操作以及数据获取位置组成。操作为Intent.ACTION_PICK。联系人数据获取位置为
+ContactsContract.Contacts.CONTENT_URI。简而言之，就是请Android帮忙从联系人数据库里
+获取某个具体联系人。
+         */
+        final Intent pickContact = new Intent(Intent.ACTION_PICK,
+                ContactsContract.Contacts.CONTENT_URI);
+        mSuspectButton = (Button) v.findViewById(R.id.crime_suspect);
+        mSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(pickContact, REQUEST_CONTACT);
+            }
+        });
+
+        if (mCrime.getSuspect() != null) {
+            mSuspectButton.setText(mCrime.getSuspect());
+
+        }
+
+
         return v;
 
     }
@@ -200,6 +230,33 @@ public class CrimeFragment extends Fragment {
             Date date = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             mCrime.setDate(date);
             updateDate();
+
+        } else if (requestCode == REQUEST_CONTACT && data != null) {
+            Uri contactUri = data.getData();
+            // Specify which fields you want your query to return
+            // values for.
+            String[] queryFields = new String[] {
+                    ContactsContract.Contacts.DISPLAY_NAME
+            };
+            //Perform your query - the contactUri is like a "where"
+            // clause here
+            Cursor c = getActivity().getContentResolver().query(contactUri, queryFields, null,
+                    null, null);
+            try {
+                //Double-check that you actually got results
+                if (c.getCount() == 0) {
+                    return;
+                }
+
+                // Pull out the first column of the first row of data-
+                // that is your suspect's name.
+                c.moveToFirst();
+                String suspect = c.getString(0);
+                mCrime.setSuspect(suspect);
+                mSuspectButton.setText(suspect);
+            }finally {
+                c.close();
+            }
 
         }
     }
