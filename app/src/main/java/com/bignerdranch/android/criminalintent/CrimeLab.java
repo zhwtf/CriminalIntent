@@ -86,6 +86,9 @@ onCreate(...)方法中创建数据库表，这需要导入CrimeDbSchema类的Cri
 
     public void deleteCrime(Crime c) {
         //mCrimes.remove(c);
+        String uuidString = c.getId().toString();
+        mDatabase.delete(CrimeTable.NAME, CrimeTable.Cols.UUID + " = ?",
+                new String[] { uuidString });
     }
 
 
@@ -168,6 +171,8 @@ CriminalIntent应用确认无问题发生。
 Java的HashMap和前面用过的Bundle。不同的是，ContentValues只能用于处理SQLite数据。
 将Crime记录转换为ContentValues实际就是在CrimeLab中创建ContentValues实例。我们
 需要新建一个私有方法
+
+used in addCrime and updateCrime
  */
     private static ContentValues getContentValues(Crime crime) {
         ContentValues values = new ContentValues();
@@ -176,6 +181,8 @@ Java的HashMap和前面用过的Bundle。不同的是，ContentValues只能用�
         values.put(CrimeTable.Cols.DATE, crime.getDate().getTime());
         values.put(CrimeTable.Cols.SOLVED, crime.isSolved() ? 1:0);
         values.put(CrimeTable.Cols.SUSPECT, crime.getSuspect());
+        values.put(CrimeTable.Cols.CONTACT_ID, crime.getContactId());
+
         return values;
     }
 

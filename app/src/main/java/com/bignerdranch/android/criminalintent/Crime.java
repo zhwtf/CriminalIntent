@@ -14,6 +14,11 @@ public class Crime {
     private boolean mSolved;
     private String mSuspect;
 
+    /*
+    嫌疑人联系方式ID
+     */
+    private long mContactId;
+
     public Crime() {
         this(UUID.randomUUID());
         //Generate unique identifier
@@ -60,5 +65,13 @@ public class Crime {
 
     public void setSuspect(String suspect) {
         mSuspect = suspect;
+    }
+
+    public long getContactId() {
+        return mContactId;
+    }
+
+    public void setContactId(long contactId) {
+        mContactId = contactId;
     }
 }

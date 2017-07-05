@@ -151,6 +151,8 @@ updateSubtitle()用它产生子标题字符串。
             mCrimeRecyclerView.setAdapter(mAdapter);
 
         } else {
+            //刷新list界面
+            mAdapter.setCrimes(crimes);
             if (mIsDeleteCrime) {
                 mAdapter.notifyItemRemoved(positionClicked);
             } else {

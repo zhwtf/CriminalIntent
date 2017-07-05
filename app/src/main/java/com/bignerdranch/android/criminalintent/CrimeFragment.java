@@ -3,6 +3,7 @@ package com.bignerdranch.android.criminalintent;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import android.widget.EditText;
 import android.view.MenuInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.support.v4.app.ShareCompat;
 
 
 import java.util.Date;
@@ -50,8 +52,19 @@ public class CrimeFragment extends Fragment {
     private EditText mTitleField;
     private Button mDateButton;
     private CheckBox mSolvedCheckBox;
+    /*
+    发送消息按钮
+     */
     private Button mReportButton;
+    /*
+    选择联系人按钮
+     */
     private Button mSuspectButton;
+
+    /*
+    拨打嫌疑人电话
+     */
+    private Button mCallSuspectButton;
 
 
 
@@ -142,17 +155,30 @@ public class CrimeFragment extends Fragment {
 
         mReportButton = (Button) v.findViewById(R.id.crime_report);
         mReportButton.setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View v) {
+                /*
                 Intent i = new Intent(Intent.ACTION_SEND);
                 i.setType("text/plain");
                 i.putExtra(Intent.EXTRA_TEXT, getCrimeReport());
                 i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
-                /*
+
                 使用隐式intent启动activity时，也可以创建每次都显示的activity选择器。和以前一样创建隐
 式intent后，调用以下Intent方法并传入创建的隐式intent以及用作选择器标题的字符串
-                 */
+
                 i = Intent.createChooser(i, getString(R.string.send_report));
+                */
+
+
+
+                // 通过ShareCompat.IntentBuilder来创建Intent
+                Intent i = ShareCompat.IntentBuilder.from(getActivity())
+                        .setText(getCrimeReport())
+                        .setSubject(getString(R.string.crime_report_subject))
+                        .setType("text/plain")
+                        .getIntent();
                 startActivity(i);
+
 
             }
         });
@@ -166,6 +192,40 @@ public class CrimeFragment extends Fragment {
 关联值。
          */
 
+        /*
+        Challenge: call a suspect
+        https://forums.bignerdranch.com/t/challenge-call-a-suspect/7828
+         */
+        mCallSuspectButton = (Button) v.findViewById(R.id.call_suspect);
+        mCallSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri contentUri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+                String selectClause = ContactsContract.CommonDataKinds.Phone.CONTACT_ID +
+                        " = ?";
+                String[] fields = {ContactsContract.CommonDataKinds.Phone.NUMBER};
+                String[] selectParams = {Long.toString(mCrime.getContactId())};
+
+                Cursor cursor = getActivity().getContentResolver()
+                        .query(contentUri, fields, selectClause, selectParams, null);
+
+                if (cursor != null) {
+                    try {
+                        if (cursor.getCount() == 0) {
+                            return;
+                        }
+                        cursor.moveToFirst();
+                        String number = cursor.getString(0);
+                        Uri phoneNumber = Uri.parse("tel:" + number);
+                        Intent i = new Intent(Intent.ACTION_DIAL, phoneNumber);
+                        startActivity(i);
+
+                    } finally {
+                        cursor.close();
+                    }
+                }
+            }
+        });
 
 
         /*
@@ -176,6 +236,8 @@ ContactsContract.Contacts.CONTENT_URI。简而言之，就是请Android帮忙从
          */
         final Intent pickContact = new Intent(Intent.ACTION_PICK,
                 ContactsContract.Contacts.CONTENT_URI);
+        //不允许匹配intent－－－》加入code
+        //pickContact.addCategory(Intent.CATEGORY_HOME);
         mSuspectButton = (Button) v.findViewById(R.id.crime_suspect);
         mSuspectButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -187,6 +249,21 @@ ContactsContract.Contacts.CONTENT_URI。简而言之，就是请Android帮忙从
         if (mCrime.getSuspect() != null) {
             mSuspectButton.setText(mCrime.getSuspect());
 
+        }
+
+        //检查是否存在联系人应用
+        /*
+        Android设备上安装了哪些组件以及包括哪些activity，PackageManager类全都知道。（本书
+后续章节还会介绍更多组件。）调用resolveActivity(Intent, int)方法，我们可以找到匹配
+给定Intent任务的activity。flag标志MATCH_DEFAULT_ONLY限定只搜索带CATEGORY_DEFAULT标
+志的activity。这和startActivity(Intent)方法类似。
+如果搜到目标，它会返回ResolveInfo告诉你找到了哪个activity。如果找不到的话，必须禁
+用嫌疑人按钮，否则应用就会崩溃
+         */
+        PackageManager packageManager = getActivity().getPackageManager();
+        if (packageManager.resolveActivity(pickContact, PackageManager.MATCH_DEFAULT_ONLY)
+                        == null) {
+            mSuspectButton.setEnabled(false);
         }
 
 
@@ -236,8 +313,7 @@ ContactsContract.Contacts.CONTENT_URI。简而言之，就是请Android帮忙从
             // Specify which fields you want your query to return
             // values for.
             String[] queryFields = new String[] {
-                    ContactsContract.Contacts.DISPLAY_NAME
-            };
+                    ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts._ID};
             //Perform your query - the contactUri is like a "where"
             // clause here
             Cursor c = getActivity().getContentResolver().query(contactUri, queryFields, null,
@@ -252,8 +328,11 @@ ContactsContract.Contacts.CONTENT_URI。简而言之，就是请Android帮忙从
                 // that is your suspect's name.
                 c.moveToFirst();
                 String suspect = c.getString(0);
+                long contactId = c.getLong(1);
                 mCrime.setSuspect(suspect);
+                mCrime.setContactId(contactId);
                 mSuspectButton.setText(suspect);
+                updateCallSuspectButton(); //enables the button and changes its text
             }finally {
                 c.close();
             }
@@ -276,6 +355,13 @@ ContactsContract.Contacts.CONTENT_URI。简而言之，就是请Android帮忙从
         getActivity().setResult(Activity.RESULT_OK, null);
 
     }
+
+    private void updateCallSuspectButton() {
+        mCallSuspectButton.setClickable(true);
+
+    }
+
+
 
     private void setResult() {
         Intent intent = new Intent();
