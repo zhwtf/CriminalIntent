@@ -26,6 +26,8 @@ import android.view.MenuInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.app.ShareCompat;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 
 
 import java.util.Date;
@@ -65,6 +67,11 @@ public class CrimeFragment extends Fragment {
     拨打嫌疑人电话
      */
     private Button mCallSuspectButton;
+
+
+    //添加image部分
+    private ImageButton mPhotoButton;
+    private ImageView mPhotoView;
 
 
 
@@ -203,11 +210,10 @@ public class CrimeFragment extends Fragment {
                 Uri contentUri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
                 String selectClause = ContactsContract.CommonDataKinds.Phone.CONTACT_ID +
                         " = ?";
-                String[] fields = {ContactsContract.CommonDataKinds.Phone.NUMBER};
-                String[] selectParams = {Long.toString(mCrime.getContactId())};
+                String[] fields = new String[] {ContactsContract.CommonDataKinds.Phone.NUMBER};
+                String[] selectParams = new String[] {Long.toString(mCrime.getContactId())};
 
-                Cursor cursor = getActivity().getContentResolver()
-                        .query(contentUri, fields, selectClause, selectParams, null);
+                Cursor cursor = getActivity().getContentResolver().query(contentUri, fields, selectClause, selectParams, null);
 
                 if (cursor != null) {
                     try {
@@ -240,7 +246,7 @@ ContactsContract.Contacts.CONTENT_URI。简而言之，就是请Android帮忙从
         //pickContact.addCategory(Intent.CATEGORY_HOME);
         mSuspectButton = (Button) v.findViewById(R.id.crime_suspect);
         mSuspectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
+
             public void onClick(View v) {
                 startActivityForResult(pickContact, REQUEST_CONTACT);
             }
@@ -265,6 +271,9 @@ ContactsContract.Contacts.CONTENT_URI。简而言之，就是请Android帮忙从
                         == null) {
             mSuspectButton.setEnabled(false);
         }
+
+        mPhotoButton = (ImageButton) v.findViewById(R.id.crime_camera);
+        mPhotoView = (ImageView) v.findViewById(R.id.crime_photo);
 
 
         return v;
