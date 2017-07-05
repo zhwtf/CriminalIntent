@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.Editable;
@@ -30,6 +31,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 
 
+import java.io.File;
 import java.util.Date;
 import java.util.StringTokenizer;
 import java.util.UUID;
@@ -45,6 +47,7 @@ public class CrimeFragment extends Fragment {
 
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_CONTACT = 1;
+    private static final int REQUEST_PHOTO = 2;
 
     public static final String EXTRA_DELETE_CRIME = "delete_crime";
 
@@ -52,6 +55,12 @@ public class CrimeFragment extends Fragment {
 
     private Crime mCrime;
     private EditText mTitleField;
+
+    /*
+    获取图片文件位置
+     */
+    private File mPhotoFile;
+
     private Button mDateButton;
     private CheckBox mSolvedCheckBox;
     /*
@@ -100,6 +109,7 @@ public class CrimeFragment extends Fragment {
         //从argument中获取crime ID
         UUID crimeId = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
+        mPhotoFile = CrimeLab.get(getActivity()).getPhotoFile(mCrime); //获取图片文件位置
     }
 
     @Override
@@ -225,6 +235,13 @@ public class CrimeFragment extends Fragment {
                         Uri phoneNumber = Uri.parse("tel:" + number);
                         Intent i = new Intent(Intent.ACTION_DIAL, phoneNumber);
                         startActivity(i);
+                        /*
+                        PackageManager packageManager = getActivity().getPackageManager();
+                        if (packageManager.resolveActivity(i, PackageManager.MATCH_DEFAULT_ONLY)
+                                == null) {
+                            mCallSuspectButton.setEnabled(false);
+                        }
+                        */
 
                     } finally {
                         cursor.close();
@@ -273,6 +290,26 @@ ContactsContract.Contacts.CONTENT_URI。简而言之，就是请Android帮忙从
         }
 
         mPhotoButton = (ImageButton) v.findViewById(R.id.crime_camera);
+        final Intent captureImage = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        boolean canTakePhoto = mPhotoFile != null &&
+                captureImage.resolveActivity(packageManager) != null;
+        mPhotoButton.setEnabled(canTakePhoto);
+
+        if (canTakePhoto) {
+            Uri uri = Uri.fromFile(mPhotoFile);
+            captureImage.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        }
+
+        mPhotoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(captureImage, REQUEST_PHOTO);
+
+            }
+        });
+        //does not work---can't open the camera
+
         mPhotoView = (ImageView) v.findViewById(R.id.crime_photo);
 
 

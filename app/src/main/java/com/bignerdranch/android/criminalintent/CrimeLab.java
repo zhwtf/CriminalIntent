@@ -148,6 +148,15 @@ onCreate(...)方法中创建数据库表，这需要导入CrimeDbSchema类的Cri
         }
     }
 
+
+
+
+
+    /*
+    新增方法不会创建任何文件。它的作用就是返回指向某个具体位置的File对象。我们在
+这个方法里加了个校验：确认外部存储是否可用。如果不可用，getExternalFilesDir(String)
+方法会返回null值。
+     */
     public File getPhotoFile(Crime crime) {
         File externalFilesDir = mContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
@@ -157,6 +166,10 @@ onCreate(...)方法中创建数据库表，这需要导入CrimeDbSchema类的Cri
 
         return new File(externalFilesDir, crime.getPhotoFilename());
     }
+
+
+
+
 
     /*
     上述代码的作用如下。
